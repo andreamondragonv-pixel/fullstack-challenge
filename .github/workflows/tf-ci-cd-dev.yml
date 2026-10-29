@@ -1,0 +1,144 @@
+name: DEV CI/CD Terraform
+
+on:
+  pull_request:
+    branches:
+      - devel
+    path:
+      - terraform/*
+
+env:
+  TF_PATH: terraform
+  TF_VERSION: '1.16.6'
+  TF_INPUT: 'false'
+  AWS_REGION: us-east-1
+  TF_STATE_KEY: tfstate
+
+jobs:
+  validate:
+    name: Configure Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Check fmt
+        working-directory: ${{ env.TF_PATH }}
+        run: terraform fmt --recursive
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_PATH }}
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_PATH }}
+        run: terraform validate
+
+  plan:
+    name: Terraform Plan
+    needs: 
+      - validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: AWS Credentials Config
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS-ACCESS-KEY-ID }}
+          aws-secret-access-key: ${{ secretts.AWS-SECRET-KEY }}
+      - name: get caller identity
+        run: |
+          aws sts get-caller-identity
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_PATH }}
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: |
+          terraform init -input=false -lockfile=readonly \
+            -backend-config="bucket=${TF_STATE_BUCKET}" \
+            -backend-config="key=${TF_STATE_KEY}" \
+            -backend-config="region=${AWS_REGION}" \
+            -backend-config="encrypt=true" \
+            -backend-config="use_lockfile=true"
+
+      - name: Terraform Plan
+        id: tf_plan
+        working-directory: ${{ env.TF_PATH }}
+        shell: bash
+        run: |
+          terraform plan -input=false -no-color -out=tfplan
+
+      - name: Terraform Show
+        working-directory: ${{ env.TF_PATH }}
+        shell: bash
+        run: |
+          terraform show -no-color tfplan
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: challenge-tfplan-${{ github.run_id }}
+          path: ${{ env.TF_PATH }}/tfplan
+
+  apply:
+    name: Terraform apply
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: AWS Credentials Config
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_PATH }}
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: |
+          terraform init -input=false -var-file=dev.tfvars -lockfile=readonly \
+            -backend-config="bucket=${TF_STATE_BUCKET}" \
+            -backend-config="key=${TF_STATE_KEY}" \
+            -backend-config="region=${AWS_REGION}" \
+            -backend-config="encrypt=true" \
+            -backend-config="use_lockfile=true"
+
+      - name: Download Tf Plan
+        uses: actions/download-artifact@v8
+        with:
+          name: challenge-tfplan-${{ github.run_id }}
+          path: ${{ env.TF_PATH }}
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_PATH }}
+        run: terraform apply -var-file=dev.tfvars tfplan
