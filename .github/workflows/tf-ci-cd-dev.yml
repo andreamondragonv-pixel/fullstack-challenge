@@ -61,7 +61,7 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS-ACCESS-KEY-ID }}
-          aws-secret-access-key: ${{ secretts.AWS-SECRET-KEY }}
+          aws-secret-access-key: ${{ secrets.AWS-SECRET-KEY }}
       - name: get caller identity
         run: |
           aws sts get-caller-identity
