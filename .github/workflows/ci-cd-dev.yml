@@ -65,7 +65,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN_APPLY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
           role-session-name: GitHubActions-Dev-Pipeline
 
       - name: Verify AWS Identity
