@@ -54,6 +54,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
 
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      id-token: write
+
     steps:
       - name: Download Build
         uses: actions/download-artifact@v4
