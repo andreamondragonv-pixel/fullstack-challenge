@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - devel
-    paths:
-      - "terraform/*"
-      - ".github/workflows/tf-apply-dev.yml"
 
 permissions:
   contents: read
