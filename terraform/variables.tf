@@ -1,93 +1,92 @@
 variable "aws_region" {
-  description = "Region para S3 y otros recursos regionales; CloudFront es global."
+  description = "Region for S3 and other regional resources; CloudFront is global."
   type        = string
   default     = "us-east-1"
 }
 
 variable "project" {
-  description = "Prefijo DNS seguro para nombrar los recursos."
+  description = "Safe DNS prefix used to name resources."
   type        = string
   default     = "cidrs-web-app"
 
   validation {
     condition     = can(regex("^[a-z][a-z0-9-]{1,19}$", var.project))
-    error_message = "project debe contener 2-20 caracteres minusculos, numeros o guiones y empezar por una letra."
+    error_message = "project must contain 2-20 lowercase letters, numbers, or hyphens and must start with a letter."
   }
 }
 
 variable "environment" {
-  description = "Ambiente de despliegue."
+  description = "Deployment environment."
   type        = string
-  default     = "dev"
 
   validation {
-    condition     = contains(["dev", "cert", "prod"], var.environment)
-    error_message = "environment debe ser dev, stg o prod."
+    condition     = contains(["dev", "stg", "prod"], var.environment)
+    error_message = "environment must be dev, stg, or prod."
   }
 }
 
 variable "price_class" {
-  description = "Cobertura geográfica de CloudFront. PriceClass_100 (Norteamérica y Europa) es la más económica; PriceClass_All usa todas las ubicaciones."
+  description = "CloudFront geographic coverage. PriceClass_100 (North America and Europe) is the most cost-effective option; PriceClass_All uses all edge locations."
   type        = string
   default     = "PriceClass_100"
 
   validation {
     condition     = contains(["PriceClass_All", "PriceClass_200", "PriceClass_100"], var.price_class)
-    error_message = "price_class debe ser PriceClass_All, PriceClass_200 o PriceClass_100."
+    error_message = "price_class must be PriceClass_All, PriceClass_200, or PriceClass_100."
   }
 }
 
 variable "spa_mode" {
-  description = "Si true, transforma 403/404 de S3 a /index.html (HTTP 200) para rutas SPA."
+  description = "If true, transforms S3 403/404 responses into /index.html (HTTP 200) to support SPA routes."
   type        = bool
   default     = true
 }
 
 variable "log_retention_days" {
-  description = "Dias de retencion de access logs antes de la eliminacion automatica. Ajustar a GRC."
+  description = "Number of days access logs are retained before automatic deletion. Adjust according to GRC requirements."
   type        = number
   default     = 90
 
   validation {
     condition     = var.log_retention_days >= 1 && floor(var.log_retention_days) == var.log_retention_days
-    error_message = "log_retention_days debe ser un entero positivo."
+    error_message = "log_retention_days must be a positive integer."
   }
 }
 
 variable "app_noncurrent_retention_days" {
-  description = "Dias que se conservan versiones antiguas de objetos de la app."
+  description = "Number of days previous versions of application objects are retained."
   type        = number
   default     = 30
 
   validation {
     condition     = var.app_noncurrent_retention_days >= 1 && floor(var.app_noncurrent_retention_days) == var.app_noncurrent_retention_days
-    error_message = "app_noncurrent_retention_days debe ser un entero positivo."
+    error_message = "app_noncurrent_retention_days must be a positive integer."
   }
 }
 
 variable "custom_domain_name" {
-  description = "Dominio opcional (ej. app.ejemplo.com); null utiliza el dominio cloudfront.net."
+  description = "Optional domain name (e.g., app.example.com); if null, the default cloudfront.net domain is used."
   type        = string
   default     = null
   nullable    = true
 }
 
 variable "acm_certificate_arn" {
-  description = "ARN ACM en us-east-1, obligatorio si se usa custom_domain_name."
+  description = "ACM certificate ARN in us-east-1, required when custom_domain_name is configured."
   type        = string
   default     = null
   nullable    = true
 }
 
 variable "web_acl_arn" {
-  description = "ARN opcional de AWS WAFv2 con scope CLOUDFRONT (us-east-1)."
+  description = "Optional AWS WAFv2 ARN with CLOUDFRONT scope (us-east-1)."
   type        = string
   default     = null
   nullable    = true
 }
 
 variable "tags" {
-  description = "Etiquetas adicionales de gobierno."
+  description = "Additional governance tags."
   type        = map(string)
   default     = {}
 }
