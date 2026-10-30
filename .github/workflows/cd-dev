@@ -1,0 +1,38 @@
+name: CD DEV Pipeline
+
+on:
+  push:
+    branches:
+      - devel
+    paths:
+      - app/**
+      - .github/workflows/cd-dev.yml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/devel'
+    environment: dev
+    steps:
+      - name: Download Build
+        uses: actions/download-artifact@v4
+        with:
+          name: Build
+          path: ./app/build
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN_PLAN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-Dev-Pipeline
+
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity
+
+      - name: Deploy S3
+        uses: reggionick/s3-deploy@v4
+        with:
+          folder: ./app/build
+          bucket: ${{ secrets.S3_BUCKET }}
+          bucket-region: us-east-1
