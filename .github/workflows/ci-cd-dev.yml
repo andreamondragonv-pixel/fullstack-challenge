@@ -91,9 +91,14 @@ jobs:
       - name: Verify AWS Identity
         run: aws sts get-caller-identity
 
-      - name: Deploy S3
-        uses: reggionick/s3-deploy@v4
-        with:
-          folder: ./app/build
-          bucket: ${{ secrets.S3_BUCKET }}
-          bucket-region: us-east-1
+      - name: Deploy to S3
+        run: |
+          aws s3 sync ./app/build \
+            s3://${{ secrets.S3_BUCKET }} \
+            --delete
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E2NRRCI81ZY09J \
+            --paths "/*"
