@@ -22,7 +22,7 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN_PLAN }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN_APPLY }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActions-Dev-Pipeline
 
