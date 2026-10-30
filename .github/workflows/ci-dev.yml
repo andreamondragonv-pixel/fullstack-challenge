@@ -13,8 +13,9 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v7
-        ref: ${{ github.head_ref || github.ref_name }}
-        fetch-depth: 0
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
