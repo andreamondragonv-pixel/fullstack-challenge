@@ -5,8 +5,8 @@ on:
     branches:
       - devel
     paths:
-      - "terraform/**"
-      - ".github/workflows/tf-ci-cd-dev.yml"
+      - "terraform/*"
+      - ".github/workflows/tf-apply-dev.yml"
 
 permissions:
   contents: read
@@ -20,7 +20,6 @@ jobs:
   apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/devel'
     environment: dev
     permissions:
       contents: read
