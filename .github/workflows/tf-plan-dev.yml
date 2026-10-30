@@ -5,7 +5,7 @@ on:
     branches:
       - devel
     paths:
-      - "terraform/*"
+      - "terraform/**"
       - ".github/workflows/tf-plan-dev.yml"
 
 permissions:
@@ -40,23 +40,24 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.TF_PATH }}
-        run: terraform  init -backend=false -input=false
+        run: terraform init -backend=false -input=false
 
       - name: Terraform Validate
         working-directory: ${{ env.TF_PATH }}
         run: terraform validate
 
+
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
     needs: validate
-    environment: dev
+
     permissions:
       contents: read
       id-token: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref || github.ref_name }}
@@ -67,12 +68,26 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
+      - name: Inspect GitHub OIDC claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('sts.amazonaws.com');
+            const payload = JSON.parse(
+              Buffer.from(token.split('.')[1], 'base64url').toString()
+            );
+
+            core.info(`OIDC issuer: ${payload.iss}`);
+            core.info(`OIDC audience: ${payload.aud}`);
+            core.info(`OIDC subject: ${payload.sub}`);
+
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN_PLAN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActions-Terraform-Plan
+          audience: sts.amazonaws.com
 
       - name: Verify AWS Identity
         run: aws sts get-caller-identity
