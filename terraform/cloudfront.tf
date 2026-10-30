@@ -1,6 +1,6 @@
 resource "aws_cloudfront_origin_access_control" "app" {
   name                              = "${local.name}-oac"
-  description                       = "Acceso privado CloudFront al bucket de la app"
+  description                       = "Private CloudFront access to the application bucket"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -8,7 +8,7 @@ resource "aws_cloudfront_origin_access_control" "app" {
 
 resource "aws_cloudfront_cache_policy" "app" {
   name        = "${local.name}-cache-policy"
-  comment     = "Politica de cache para app estatica"
+  comment     = "Cache policy"
   min_ttl     = 0
   default_ttl = 3600
   max_ttl     = 86400
@@ -20,9 +20,11 @@ resource "aws_cloudfront_cache_policy" "app" {
     cookies_config {
       cookie_behavior = "none"
     }
+
     headers_config {
       header_behavior = "none"
     }
+
     query_strings_config {
       query_string_behavior = "none"
     }
@@ -31,20 +33,23 @@ resource "aws_cloudfront_cache_policy" "app" {
 
 resource "aws_cloudfront_response_headers_policy" "security" {
   name    = "${local.name}-security-headers"
-  comment = "Cabeceras de seguridad para la app estatica"
+  comment = "Security headers"
 
   security_headers_config {
     content_type_options {
       override = true
     }
+
     frame_options {
       frame_option = "DENY"
       override     = true
     }
+
     referrer_policy {
       referrer_policy = "strict-origin-when-cross-origin"
       override        = true
     }
+
     strict_transport_security {
       access_control_max_age_sec = 31536000
       include_subdomains         = false
@@ -58,7 +63,7 @@ resource "aws_cloudfront_distribution" "app" {
   enabled             = true
   is_ipv6_enabled     = true
   http_version        = "http2and3"
-  comment             = "${local.name} - app desde S3 privado"
+  comment             = "${local.name} - application served from private S3 bucket"
   default_root_object = "index.html"
   price_class         = var.price_class
   wait_for_deployment = true
@@ -81,9 +86,9 @@ resource "aws_cloudfront_distribution" "app" {
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
   }
 
-
   dynamic "custom_error_response" {
     for_each = var.spa_mode ? [403, 404] : []
+
     content {
       error_code            = custom_error_response.value
       error_caching_min_ttl = 0
@@ -98,7 +103,6 @@ resource "aws_cloudfront_distribution" "app" {
     }
   }
 
-
   viewer_certificate {
     cloudfront_default_certificate = var.custom_domain_name == null
     acm_certificate_arn            = var.custom_domain_name != null ? var.acm_certificate_arn : null
@@ -112,7 +116,7 @@ resource "aws_cloudfront_distribution" "app" {
         var.acm_certificate_arn != null &&
         can(regex("^arn:aws:acm:us-east-1:[0-9]{12}:certificate/", var.acm_certificate_arn))
       )
-      error_message = "Para custom_domain_name, indicar un ARN ACM valido de us-east-1."
+      error_message = "When custom_domain_name is configured, provide a valid ACM certificate ARN from us-east-1."
     }
   }
 }
