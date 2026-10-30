@@ -74,10 +74,10 @@ resource "aws_cloudfront_distribution" "app" {
   default_cache_behavior {
     target_origin_id           = local.origin_id
     viewer_protocol_policy     = "redirect-to-https"
-    allowed_methods           = ["GET", "HEAD", "OPTIONS"]
-    cached_methods            = ["GET", "HEAD"]
-    compress                  = true
-    cache_policy_id           = aws_cloudfront_cache_policy.app.id
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    compress                   = true
+    cache_policy_id            = aws_cloudfront_cache_policy.app.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
   }
 
@@ -98,7 +98,7 @@ resource "aws_cloudfront_distribution" "app" {
     }
   }
 
-  
+
   viewer_certificate {
     cloudfront_default_certificate = var.custom_domain_name == null
     acm_certificate_arn            = var.custom_domain_name != null ? var.acm_certificate_arn : null

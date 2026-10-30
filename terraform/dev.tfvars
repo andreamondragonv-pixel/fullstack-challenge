@@ -8,5 +8,5 @@ app_noncurrent_retention_days = 30
 
 
 tags = {
-  Terraform      = "true"
+  Terraform = "true"
 }

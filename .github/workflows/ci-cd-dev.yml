@@ -1,5 +1,6 @@
 name: CI/CD DEV Pipeline
-"on":
+
+on:
   pull_request:
     branches:
       - devel
