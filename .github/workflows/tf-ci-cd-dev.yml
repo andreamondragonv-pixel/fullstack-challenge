@@ -7,6 +7,14 @@ on:
     paths:
       - 'terraform/**'
       - '.github/workflows/tf-ci-cd-dev.yml'
+
+  push:
+    branches:
+      - devel
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/tf-ci-cd-dev.yml'
+
 env:
   TF_PATH: terraform
   TF_VERSION: 1.16.6
@@ -14,51 +22,61 @@ env:
   AWS_REGION: us-east-1
   TF_STATE_KEY: tfstate
   TF_STATE_BUCKET: gomo-terraform
+
 jobs:
+
   validate:
     name: Configure Terraform
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v7
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
+
       - name: Check fmt
         working-directory: ${{ env.TF_PATH }}
         run: terraform fmt -check -recursive
+
       - name: Terraform Init
         working-directory: ${{ env.TF_PATH }}
         run: terraform init -backend=false -input=false
+
       - name: Terraform Validate
         working-directory: ${{ env.TF_PATH }}
         run: terraform validate
+
   plan:
     name: Terraform Plan
-    needs:
-      - validate
+    needs: validate
     runs-on: ubuntu-latest
-    environment: dev
+
     permissions:
       contents: read
       id-token: write
+
     steps:
       - name: Check out code
         uses: actions/checkout@v7
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
+
       - name: AWS Credentials Config
         uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-      - name: get caller identity
-        run: |
-          aws sts get-caller-identity
+
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity
+
       - name: Terraform Init
         working-directory: ${{ env.TF_PATH }}
         run: |
@@ -68,30 +86,38 @@ jobs:
             -backend-config="region=${AWS_REGION}" \
             -backend-config="encrypt=true" \
             -backend-config="use_lockfile=true"
+
       - name: Terraform Plan
         id: tf_plan
         working-directory: ${{ env.TF_PATH }}
         shell: bash
         run: |
-          terraform plan -input=false -var-file=dev.tfvars -out=tfplan
+          terraform plan \
+            -input=false \
+            -var-file=dev.tfvars \
+            -out=tfplan
+
       - name: Terraform Show
         working-directory: ${{ env.TF_PATH }}
-        shell: bash
-        run: |
-          terraform show -no-color tfplan
+        run: terraform show -no-color tfplan
+
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
         with:
           name: challenge-tfplan-${{ github.run_id }}
           path: ${{ env.TF_PATH }}/tfplan
+          retention-days: 1
+
   apply:
     name: Terraform Apply
     needs: plan
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/devel'
     environment: dev
     permissions:
       contents: read
       id-token: write
+
     steps:
       - name: Check out code
         uses: actions/checkout@v7
@@ -110,8 +136,6 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.TF_PATH }}
-        env:
-          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
         run: |
           terraform init -input=false -lockfile=readonly \
             -backend-config="bucket=${TF_STATE_BUCKET}" \
@@ -120,8 +144,8 @@ jobs:
             -backend-config="encrypt=true" \
             -backend-config="use_lockfile=true"
 
-      - name: Download Tf Plan
-        uses: actions/download-artifact@v8
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v4
         with:
           name: challenge-tfplan-${{ github.run_id }}
           path: ${{ env.TF_PATH }}
