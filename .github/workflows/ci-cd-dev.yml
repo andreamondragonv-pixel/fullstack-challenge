@@ -1,66 +1,17 @@
 name: CI/CD DEV Pipeline
 
-on: 
+on:
   pull_request:
     branches:
       - devel
-      - feature/* 
-
     paths:
-      - app/**
-      - ci-cd-dev.yml
+      - 'app/**'
+      - '.github/workflows/ci-cd-dev.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: dev
 
-    steps: 
-      - name: Check out code
-        uses: actions/checkout@v7
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '16'
-
-      - name: Install dependencies
-        run: |
-          cd app
-          npm install
-
-      - name: Run linter
-        run: |
-          cd app
-          npm run lint
-
-      - name: Run formatter
-        run: |
-          cd app
-          npm run prettier
-
-      - name: Run tests
-        env: 
-          CI: true
-        run: |
-          cd app
-          npm run test
-
-      - name: Build project
-        run: |
-          cd app
-          npm run build
-
-      - name: Persist Build 
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build
-          path: ./app/build
-
-  deploy:
-    runs-on: ubuntu-latest
-    environment: dev
-    needs: build
     steps:
       - name: Check out code
         uses: actions/checkout@v7
@@ -71,17 +22,47 @@ jobs:
           node-version: '16'
 
       - name: Install dependencies
-        run: |
-         cd app
-         npm install
+        working-directory: ./app
+        run: npm install
 
-      - name: Restore Build 
+      - name: Run linter
+        working-directory: ./app
+        run: npm run lint
+
+      - name: Run formatter
+        working-directory: ./app
+        run: npm run prettier
+
+      - name: Run tests
+        working-directory: ./app
+        env:
+          CI: true
+        run: npm run test
+
+      - name: Build project
+        working-directory: ./app
+        run: npm run build
+
+      - name: Persist Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build
+          path: ./app/build
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/devel'
+    environment: dev
+
+    steps:
+      - name: Download Build
         uses: actions/download-artifact@v4
         with:
           name: Build
-          path: ./app
-      
-      - name: Debloy S3
+          path: ./app/build
+
+      - name: Deploy S3
         uses: reggionick/s3-deploy@v4
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -90,4 +71,3 @@ jobs:
           folder: ./app/build
           bucket: ${{ secrets.S3_BUCKET }}
           bucket-region: us-east-1
-

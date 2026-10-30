@@ -4,8 +4,8 @@ on:
     branches:
       - devel
     paths:
-      - terraform/**
-      - tf-ci-cd-dev.yml
+      - 'terraform/**'
+      - '.github/workflows/tf-ci-cd-dev.yml'
 env:
   TF_PATH: terraform
   TF_VERSION: 1.16.6
@@ -52,8 +52,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS-ACCESS-KEY-ID }}
-          aws-secret-access-key: ${{ secrets.AWS-SECRET-KEY }}
+          aws-access-secret-key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
       - name: get caller identity
         run: |
           aws sts get-caller-identity
@@ -104,8 +104,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS-ACCESS-KEY-ID }}
-          aws-secret-access-key: ${{ secrets.AWS-SECRET-KEY }}
+          aws-access-key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
       - name: Terraform Init
         working-directory: ${{ env.TF_PATH }}
