@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        ref: ${{ github.head_ref || github.ref_name }}
+        fetch-depth: 0
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
