@@ -1,0 +1,18 @@
+aws_region                    = "us-east-1"
+project                       = "portal"
+environment                   = "dev"
+price_class                   = "PriceClass_100"
+spa_mode                      = true
+log_retention_days            = 90
+app_noncurrent_retention_days = 30
+
+# Opcionales: un certificado ACM en us-east-1 es necesario para dominio propio.
+# custom_domain_name  = "app.midominio.com"
+# acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# WAF opcional; usar un Web ACL con scope CLOUDFRONT (us-east-1).
+# web_acl_arn = "arn:aws:wafv2:us-east-1:123456789012:global/webacl/portal-web-acl/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+tags = {
+  Terraform      = "true"
+}
