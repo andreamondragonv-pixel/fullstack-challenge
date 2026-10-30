@@ -66,6 +66,9 @@ jobs:
       - name: Terraform Apply
         working-directory: ${{ env.TF_PATH }}
         run: |
+          ls -lah
+          terraform show tfplan
+          
           terraform apply \
             -input=false \
             -auto-approve \

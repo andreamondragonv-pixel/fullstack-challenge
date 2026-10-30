@@ -45,3 +45,4 @@ jobs:
         with:
           name: Build
           path: ./app/build
+          retention-days: 1
