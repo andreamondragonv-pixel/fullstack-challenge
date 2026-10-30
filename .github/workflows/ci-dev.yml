@@ -1,4 +1,4 @@
-name: CI/CD DEV Pipeline
+name: CI DEV Pipeline
 
 on:
   pull_request:
@@ -44,5 +44,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Build
-          path: ./app/build
+          path: app/build
           retention-days: 1

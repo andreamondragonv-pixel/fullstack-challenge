@@ -62,13 +62,16 @@ jobs:
         with:
           name: terraform-plan
           path: terraform/
+          github-token: ${{ secrets.GH_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_PATH }}
         run: |
           ls -lah
           terraform show tfplan
-          
+
           terraform apply \
             -input=false \
             -auto-approve \
