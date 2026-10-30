@@ -26,7 +26,7 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
       - name: Check fmt
         working-directory: ${{ env.TF_PATH }}
-        run: terraform fmt --recursive
+        run: terraform fmt -check -recursive
       - name: Terraform Init
         working-directory: ${{ env.TF_PATH }}
         run: terraform init -backend=false -input=false
@@ -38,6 +38,7 @@ jobs:
     needs:
       - validate
     runs-on: ubuntu-latest
+    environment: dev
     permissions:
       contents: read
       id-token: write
@@ -90,7 +91,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-
     steps:
       - name: Check out code
         uses: actions/checkout@v7
