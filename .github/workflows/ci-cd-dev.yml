@@ -50,7 +50,7 @@ jobs:
 
   deploy:
     name: Deploy to S3
-    need: build
+    needs: build
     runs-on: ubuntu-latest
     environment: dev
 
