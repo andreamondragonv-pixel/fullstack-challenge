@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - devel
+  paths:
+    - terraform/**
+    - .github/workflows/tf-*-dev.yml
 
 permissions:
   contents: read
