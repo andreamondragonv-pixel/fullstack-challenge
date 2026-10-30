@@ -12,7 +12,8 @@ env:
   TF_INPUT: "false"
   AWS_REGION: us-east-1
   TF_STATE_KEY: tfstate
-  
+  TF_STATE_BUCKET: gomo-terraform
+
 jobs:
   validate:
     name: Configure Terraform
@@ -59,8 +60,6 @@ jobs:
           aws sts get-caller-identity
       - name: Terraform Init
         working-directory: ${{ env.TF_PATH }}
-        env:
-          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
         run: |
           terraform init -input=false -lockfile=readonly \
             -backend-config="bucket=${TF_STATE_BUCKET}" \
