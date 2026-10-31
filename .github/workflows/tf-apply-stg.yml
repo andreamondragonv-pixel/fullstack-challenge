@@ -62,7 +62,7 @@ jobs:
         run: |
           terraform plan \
             -input=false \
-            -var-file=dev.tfvars \
+            -var-file=stage.tfvars \
             -out=tfplan
 
       - name: Terraform Apply

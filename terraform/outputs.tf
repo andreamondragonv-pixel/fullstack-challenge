@@ -14,7 +14,7 @@ output "cloudfront_domain_name" {
 
 output "app_url" {
   description = "Application URL. For a custom domain, configure DNS with an Alias record pointing to CloudFront."
-  value       = "https://${coalesce(var.custom_domain_name, aws_cloudfront_distribution.app.domain_name)}"
+  value       = "https://${coalesce(aws_cloudfront_distribution.app.domain_name)}"
 }
 
 output "cloudfront_hosted_zone_id" {

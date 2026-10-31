@@ -71,20 +71,6 @@ variable "custom_domain_name" {
   nullable    = true
 }
 
-variable "acm_certificate_arn" {
-  description = "ACM certificate ARN in us-east-1, required when custom_domain_name is configured."
-  type        = string
-  default     = null
-  nullable    = true
-}
-
-variable "web_acl_arn" {
-  description = "Optional AWS WAFv2 ARN with CLOUDFRONT scope (us-east-1)."
-  type        = string
-  default     = null
-  nullable    = true
-}
-
 variable "tags" {
   description = "Additional governance tags."
   type        = map(string)
