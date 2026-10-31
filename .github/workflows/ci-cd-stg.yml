@@ -3,7 +3,7 @@ name: CI/CD STG Pipeline
 on:
   push:
     branches:
-      - devel
+      - stage
     paths:
       - app/**
       - .github/workflows/ci-cd-stg.yml

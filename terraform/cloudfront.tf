@@ -104,19 +104,7 @@ resource "aws_cloudfront_distribution" "app" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = var.custom_domain_name == null
-    acm_certificate_arn            = var.custom_domain_name != null ? var.acm_certificate_arn : null
-    ssl_support_method             = var.custom_domain_name != null ? "sni-only" : null
-    minimum_protocol_version       = var.custom_domain_name != null ? "TLSv1.2_2021" : null
+    cloudfront_default_certificate = true
   }
 
-  lifecycle {
-    precondition {
-      condition = var.custom_domain_name == null || (
-        var.acm_certificate_arn != null &&
-        can(regex("^arn:aws:acm:us-east-1:[0-9]{12}:certificate/", var.acm_certificate_arn))
-      )
-      error_message = "When custom_domain_name is configured, provide a valid ACM certificate ARN from us-east-1."
-    }
-  }
 }
