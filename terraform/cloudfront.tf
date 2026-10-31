@@ -67,8 +67,6 @@ resource "aws_cloudfront_distribution" "app" {
   default_root_object = "index.html"
   price_class         = var.price_class
   wait_for_deployment = true
-  aliases             = var.custom_domain_name == null ? [] : [var.custom_domain_name]
-  web_acl_id          = var.web_acl_arn
 
   origin {
     domain_name              = aws_s3_bucket.app.bucket_regional_domain_name
