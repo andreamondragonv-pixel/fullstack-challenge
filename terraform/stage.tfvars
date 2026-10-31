@@ -1,5 +1,5 @@
 aws_region                    = "us-east-1"
-project                       = "portal"
+project                       = "challenge"
 environment                   = "stg"
 price_class                   = "PriceClass_100"
 spa_mode                      = true
