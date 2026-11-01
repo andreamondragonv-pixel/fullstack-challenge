@@ -85,7 +85,9 @@ jobs:
             --delete
 
       - name: Invalidate CloudFront Cache
+        env:
+          DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id E2NRRCI81ZY09J \
+            --distribution-id "$DISTRIBUTION_ID" \
             --paths "/*"
