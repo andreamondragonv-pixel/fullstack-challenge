@@ -1,0 +1,80 @@
+name: Terraform Plan - Dev
+
+on:
+  pull_request:
+    branches:
+      - devel
+    paths:
+      - terraform/**
+      - .github/workflows/tf-plan-dev.yml
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  TF_PATH: terraform
+  TF_VERSION: "1.16.6"
+
+jobs:
+
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format
+        working-directory: ${{ env.TF_PATH }}
+        run: terraform fmt -check -recursive
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN_PLAN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-Terraform-Plan-Dev
+          audience: sts.amazonaws.com
+
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_PATH }}
+        run: |
+          terraform init \
+            -input=false \
+            -backend-config="bucket=gomo-terraform" \
+            -backend-config="key=tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="use_lockfile=true"
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_PATH }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_PATH }}
+        run: |
+          terraform plan \
+            -input=false \
+            -var-file=dev.tfvars \
+            -out=tfplan
+
+      - name: Show Terraform Plan
+        working-directory: ${{ env.TF_PATH }}
+        run: terraform show tfplan
